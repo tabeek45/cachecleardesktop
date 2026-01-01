@@ -2,7 +2,7 @@
 $systemDirectories = @(
     "C:\Windows\Temp",
     "C:\Windows\Prefetch",
-    "C:\Windows\SoftwareDistribution\Download"
+    "C:\Windows\SoftwareDistribution"
 )
 
 # Function to delete all files in a given directory and calculate the size of deleted files
@@ -45,5 +45,25 @@ foreach ($userDir in $userDirectories) {
 
 Write-Host "All specified files and directories have been cleared. Total space freed: $([math]::Round($totalFreed, 2)) GB."
 
+
+# List of services to stop and disable
+$servicesToDisable = @("DiagTrack", "WerSvc", "DPS", "RemoteRegistry", "XblAuthManager", "XblGameSave", "XboxNetApiSvc", "SysMain")
+
+# Stop and disable each service
+foreach ($service in $servicesToDisable) {
+    try {
+        $svc = Get-Service -Name $service -ErrorAction Stop
+        if ($svc.Status -eq "Running") {
+            Stop-Service -Name $service -Force -ErrorAction Stop
+            Write-Host "Stopped service: $service"
+        }
+        Set-Service -Name $service -StartupType Disabled -ErrorAction Stop
+        Write-Host "Disabled service: $service"
+    } catch {
+        Write-Host "Error with service $service"
+    }
+}
+
+Write-Host "Service stopping completed"
 
 pause
